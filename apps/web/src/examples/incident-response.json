@@ -1,0 +1,236 @@
+{
+  "id": "incident-response",
+  "version": 1,
+  "name": "Incident response",
+  "description": "Triage an alert, page on-call for severe incidents until someone acknowledges, then verify recovery and post an update.",
+  "inputs": {
+    "service": {
+      "type": "string",
+      "required": true,
+      "description": "payments-api is failing (SEV1); search-api is only slow (SEV2)",
+      "default": "payments-api"
+    },
+    "alert": {
+      "type": "text",
+      "required": true,
+      "default": "Error rate above threshold for 5 minutes"
+    }
+  },
+  "tools": [
+    "check_service_health",
+    "create_ticket",
+    "page_oncall",
+    "post_slack_message"
+  ],
+  "start": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "label": "Start",
+      "ui": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "health",
+      "type": "tool",
+      "label": "Check health",
+      "tool": "check_service_health",
+      "args": {
+        "service": "{{inputs.service}}"
+      },
+      "saveAs": "health",
+      "ui": {
+        "x": 0,
+        "y": 154
+      }
+    },
+    {
+      "id": "severity",
+      "type": "decision",
+      "label": "Severity",
+      "instructions": "SEV1 if the error rate is above 5% or the status is \"down\". Otherwise SEV2.",
+      "ui": {
+        "x": 0,
+        "y": 322
+      }
+    },
+    {
+      "id": "page",
+      "type": "tool",
+      "label": "Page on-call",
+      "tool": "page_oncall",
+      "args": "agent",
+      "maxVisits": 3,
+      "ui": {
+        "x": -300,
+        "y": 504
+      }
+    },
+    {
+      "id": "ack",
+      "type": "human",
+      "label": "On-call acknowledges",
+      "assignee": "On-call engineer",
+      "prompt": "SEV1 on {{inputs.service}}: {{inputs.alert}}. Acknowledge and share your plan.",
+      "form": {
+        "acknowledged": {
+          "type": "boolean",
+          "required": true
+        },
+        "plan": {
+          "type": "text",
+          "description": "What you are doing about it"
+        },
+        "settle_for": {
+          "type": "duration",
+          "required": true,
+          "description": "How long to let the fix settle before re-checking health"
+        }
+      },
+      "timeout": "2m",
+      "saveAs": "ack",
+      "maxVisits": 3,
+      "ui": {
+        "x": -300,
+        "y": 672
+      }
+    },
+    {
+      "id": "settle",
+      "type": "wait",
+      "label": "Let fix settle",
+      "duration": "{{ack.settle_for}}",
+      "ui": {
+        "x": -300,
+        "y": 880
+      }
+    },
+    {
+      "id": "recheck",
+      "type": "tool",
+      "label": "Re-check health",
+      "tool": "check_service_health",
+      "args": {
+        "service": "{{inputs.service}}"
+      },
+      "saveAs": "health_after",
+      "ui": {
+        "x": -300,
+        "y": 1010
+      }
+    },
+    {
+      "id": "update",
+      "type": "agent",
+      "label": "Post update",
+      "tools": [
+        "post_slack_message"
+      ],
+      "instructions": "Post a short status update to #incidents: severity, what on-call said, before/after health numbers.",
+      "ui": {
+        "x": -300,
+        "y": 1150
+      }
+    },
+    {
+      "id": "ticket",
+      "type": "tool",
+      "label": "Open ticket",
+      "tool": "create_ticket",
+      "args": "agent",
+      "instructions": "Priority P2. Include the alert and the health numbers.",
+      "ui": {
+        "x": 275,
+        "y": 504
+      }
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "label": "Done",
+      "output": {
+        "severity": {
+          "type": "string",
+          "required": true
+        },
+        "resolved": {
+          "type": "boolean",
+          "required": true
+        },
+        "summary": {
+          "type": "text",
+          "required": true
+        }
+      },
+      "ui": {
+        "x": 0,
+        "y": 1344
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "start",
+      "to": "health"
+    },
+    {
+      "id": "e2",
+      "from": "health",
+      "to": "severity"
+    },
+    {
+      "id": "e3",
+      "from": "severity",
+      "to": "page",
+      "label": "SEV1",
+      "when": "health.error_rate_pct > 5 || health.status == \"down\""
+    },
+    {
+      "id": "e4",
+      "from": "severity",
+      "to": "ticket",
+      "label": "SEV2"
+    },
+    {
+      "id": "e5",
+      "from": "page",
+      "to": "ack"
+    },
+    {
+      "id": "e6",
+      "from": "ack",
+      "to": "settle",
+      "label": "acknowledged"
+    },
+    {
+      "id": "e7",
+      "from": "ack",
+      "to": "page",
+      "on": "timeout"
+    },
+    {
+      "id": "e8",
+      "from": "settle",
+      "to": "recheck"
+    },
+    {
+      "id": "e9",
+      "from": "recheck",
+      "to": "update"
+    },
+    {
+      "id": "e10",
+      "from": "update",
+      "to": "end"
+    },
+    {
+      "id": "e11",
+      "from": "ticket",
+      "to": "end"
+    }
+  ]
+}

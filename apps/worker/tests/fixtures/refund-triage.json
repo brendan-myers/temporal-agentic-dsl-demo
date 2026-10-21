@@ -1,0 +1,209 @@
+{
+  "id": "refund-triage",
+  "version": 1,
+  "name": "Refund request triage",
+  "description": "Check a refund request, get manager approval when policy requires it, refund, and reply to the customer.",
+  "inputs": {
+    "order_id": {
+      "type": "string",
+      "required": true,
+      "description": "ORD-1042 is $136.99 (needs approval); ORD-2001 is $42.50 and recent",
+      "default": "ORD-1042"
+    },
+    "customer_email": {
+      "type": "string",
+      "required": true,
+      "description": "sam@example.com is in good standing; riley@example.com is flagged at risk",
+      "default": "sam@example.com"
+    },
+    "reason": {
+      "type": "text",
+      "description": "Why the customer wants a refund",
+      "default": "Arrived damaged"
+    }
+  },
+  "tools": [
+    "issue_refund",
+    "lookup_customer",
+    "lookup_order",
+    "send_email"
+  ],
+  "start": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "label": "Start",
+      "ui": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "lookup",
+      "type": "tool",
+      "label": "Look up order",
+      "tool": "lookup_order",
+      "args": {
+        "order_id": "{{inputs.order_id}}"
+      },
+      "saveAs": "order",
+      "ui": {
+        "x": 0,
+        "y": 154
+      }
+    },
+    {
+      "id": "customer",
+      "type": "tool",
+      "label": "Look up customer",
+      "tool": "lookup_customer",
+      "args": {
+        "email": "{{inputs.customer_email}}"
+      },
+      "saveAs": "customer",
+      "ui": {
+        "x": 0,
+        "y": 322
+      }
+    },
+    {
+      "id": "check",
+      "type": "decision",
+      "label": "Needs approval?",
+      "instructions": "Refunds over $100, orders older than 30 days, or customers whose account status is \"at_risk\" need manager approval. Everything else is auto-approved.",
+      "ui": {
+        "x": 0,
+        "y": 490
+      }
+    },
+    {
+      "id": "approve",
+      "type": "human",
+      "label": "Manager approval",
+      "assignee": "Support manager",
+      "prompt": "Approve a refund of {{order.amount}} {{order.currency}} on order {{inputs.order_id}} for {{inputs.customer_email}}? Customer says: {{inputs.reason}}",
+      "form": {
+        "approved": {
+          "type": "boolean",
+          "required": true,
+          "description": "Approve the refund"
+        },
+        "note": {
+          "type": "text",
+          "description": "Note for the customer or the agent"
+        }
+      },
+      "timeout": "24h",
+      "saveAs": "approval",
+      "ui": {
+        "x": -325,
+        "y": 686
+      }
+    },
+    {
+      "id": "refund",
+      "type": "tool",
+      "label": "Issue refund",
+      "tool": "issue_refund",
+      "args": "agent",
+      "instructions": "Refund the full order amount unless the manager's note says otherwise.",
+      "saveAs": "refund",
+      "ui": {
+        "x": 250,
+        "y": 882
+      }
+    },
+    {
+      "id": "reply",
+      "type": "agent",
+      "label": "Email customer",
+      "tools": [
+        "send_email"
+      ],
+      "instructions": "Email the customer about the outcome: refunded (include the amount) or declined (pass on the manager's note kindly, if there is one). Keep it under 120 words.",
+      "ui": {
+        "x": 0,
+        "y": 1078
+      }
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "label": "Done",
+      "output": {
+        "refunded": {
+          "type": "boolean",
+          "required": true
+        },
+        "summary": {
+          "type": "text",
+          "required": true,
+          "description": "One-paragraph summary of what happened"
+        }
+      },
+      "ui": {
+        "x": 0,
+        "y": 1246
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "start",
+      "to": "lookup"
+    },
+    {
+      "id": "e2",
+      "from": "lookup",
+      "to": "customer"
+    },
+    {
+      "id": "e3",
+      "from": "customer",
+      "to": "check"
+    },
+    {
+      "id": "e4",
+      "from": "check",
+      "to": "approve",
+      "label": "needs approval",
+      "when": "order.amount > 100 || order.ordered_days_ago > 30 || customer.account_status == \"at_risk\""
+    },
+    {
+      "id": "e5",
+      "from": "check",
+      "to": "refund",
+      "label": "auto-approve"
+    },
+    {
+      "id": "e6",
+      "from": "approve",
+      "to": "refund",
+      "label": "approved"
+    },
+    {
+      "id": "e7",
+      "from": "approve",
+      "to": "reply",
+      "label": "rejected"
+    },
+    {
+      "id": "e8",
+      "from": "approve",
+      "to": "reply",
+      "on": "timeout"
+    },
+    {
+      "id": "e9",
+      "from": "refund",
+      "to": "reply"
+    },
+    {
+      "id": "e10",
+      "from": "reply",
+      "to": "end"
+    }
+  ]
+}

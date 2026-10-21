@@ -1,0 +1,122 @@
+[
+  {
+    "name": "report_step",
+    "description": "Record which step of the workflow you are starting, so the operator can follow the run.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "step_id": {
+          "type": "string",
+          "description": "Id of the step you are starting"
+        },
+        "note": {
+          "type": "string",
+          "description": "One short sentence: what you're doing, or for a decision which option you chose and why."
+        }
+      },
+      "required": [
+        "step_id",
+        "note"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "ask_human",
+    "description": "Ask a person for input and wait for their answer (this can take hours or days). Returns {\"response\": {...}} with their answer, or {\"timedOut\": true}.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "step_id": {
+          "type": "string",
+          "description": "Id of the human step"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "The question for the person, with any {{...}} values filled in"
+        },
+        "fields": {
+          "type": "object",
+          "description": "The form to show, keyed by field name (the step's form)",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "string",
+                  "text",
+                  "number",
+                  "boolean",
+                  "duration"
+                ]
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        },
+        "timeout": {
+          "type": "string",
+          "description": "How long to wait, like 30m, 24h or 2d. Omit to wait indefinitely."
+        },
+        "assignee": {
+          "type": "string",
+          "description": "Who should answer"
+        }
+      },
+      "required": [
+        "step_id",
+        "prompt",
+        "fields"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "wait",
+    "description": "Pause the run for a duration on a durable timer. Returns when the time has passed.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "step_id": {
+          "type": "string",
+          "description": "Id of the wait step"
+        },
+        "duration": {
+          "type": "string",
+          "description": "Like 30s, 10m, 2h or 1d"
+        }
+      },
+      "required": [
+        "step_id",
+        "duration"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "finish",
+    "description": "Finish the run with its output. This must be your last call.",
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "output": {
+          "type": "object",
+          "description": "The End step's output fields"
+        }
+      },
+      "required": [
+        "output"
+      ],
+      "additionalProperties": false
+    }
+  }
+]

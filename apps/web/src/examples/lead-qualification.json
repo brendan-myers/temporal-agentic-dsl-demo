@@ -1,0 +1,176 @@
+{
+  "id": "lead-qualification",
+  "version": 1,
+  "name": "Inbound lead qualification",
+  "description": "Enrich an inbound lead, score it against our ideal customer profile, and route it.",
+  "inputs": {
+    "email": {
+      "type": "string",
+      "required": true,
+      "default": "jordan@northwind.example"
+    },
+    "company_domain": {
+      "type": "string",
+      "required": true,
+      "description": "northwind.example is a strong fit; brightleaf.example is mid-size; tinyshop.example is small",
+      "default": "northwind.example"
+    },
+    "message": {
+      "type": "text",
+      "description": "What the lead wrote in the contact form",
+      "default": "We run ~400 nightly batch jobs and keep losing work when nodes die. Looking for something durable."
+    }
+  },
+  "tools": [
+    "create_crm_task",
+    "lookup_company",
+    "search_knowledge_base",
+    "send_email"
+  ],
+  "start": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "start",
+      "label": "Start",
+      "ui": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "enrich",
+      "type": "tool",
+      "label": "Enrich company",
+      "tool": "lookup_company",
+      "args": {
+        "domain": "{{inputs.company_domain}}"
+      },
+      "saveAs": "company",
+      "ui": {
+        "x": 0,
+        "y": 154
+      }
+    },
+    {
+      "id": "score",
+      "type": "agent",
+      "label": "Score lead",
+      "tools": [
+        "search_knowledge_base"
+      ],
+      "saveAs": "score",
+      "instructions": "Look up our ideal customer profile in the knowledge base, then score this lead 0-100 on fit and intent using the company data and the lead's message. Save an object with score (number) and rationale (string).",
+      "ui": {
+        "x": 0,
+        "y": 322
+      }
+    },
+    {
+      "id": "route",
+      "type": "decision",
+      "label": "Route lead",
+      "instructions": "Score 70 or above is \"hot\". 40-69 is \"nurture\". Below 40 is \"disqualify\".",
+      "ui": {
+        "x": 0,
+        "y": 490
+      }
+    },
+    {
+      "id": "handoff",
+      "type": "tool",
+      "label": "Create AE task",
+      "tool": "create_crm_task",
+      "args": "agent",
+      "instructions": "Owner is \"Enterprise AE team\". Put the score rationale and company facts in the notes.",
+      "ui": {
+        "x": -325,
+        "y": 672
+      }
+    },
+    {
+      "id": "nurture",
+      "type": "agent",
+      "label": "Send nurture email",
+      "tools": [
+        "send_email"
+      ],
+      "instructions": "Send a friendly, specific email that links their message to one relevant resource. No hard sell.",
+      "ui": {
+        "x": 0,
+        "y": 672
+      }
+    },
+    {
+      "id": "end",
+      "type": "end",
+      "label": "Done",
+      "output": {
+        "tier": {
+          "type": "string",
+          "required": true,
+          "description": "hot, nurture or disqualify"
+        },
+        "score": {
+          "type": "number",
+          "required": true
+        },
+        "summary": {
+          "type": "text",
+          "required": true
+        }
+      },
+      "ui": {
+        "x": 0,
+        "y": 868
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "from": "start",
+      "to": "enrich"
+    },
+    {
+      "id": "e2",
+      "from": "enrich",
+      "to": "score"
+    },
+    {
+      "id": "e3",
+      "from": "score",
+      "to": "route"
+    },
+    {
+      "id": "e4",
+      "from": "route",
+      "to": "handoff",
+      "label": "hot",
+      "when": "score.score >= 70"
+    },
+    {
+      "id": "e5",
+      "from": "route",
+      "to": "nurture",
+      "label": "nurture",
+      "when": "score.score >= 40"
+    },
+    {
+      "id": "e6",
+      "from": "route",
+      "to": "end",
+      "label": "disqualify"
+    },
+    {
+      "id": "e7",
+      "from": "handoff",
+      "to": "end"
+    },
+    {
+      "id": "e8",
+      "from": "nurture",
+      "to": "end"
+    }
+  ]
+}

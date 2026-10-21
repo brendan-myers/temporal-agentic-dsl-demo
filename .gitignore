@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.temporal.db*
+*.tsbuildinfo
+apps/server/data/
+.venv
+__pycache__
+.pytest_cache
+.claude/

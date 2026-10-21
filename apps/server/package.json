@@ -1,0 +1,21 @@
+{
+  "name": "@demo/server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@demo/dsl": "workspace:*",
+    "@fastify/cors": "11.3.0",
+    "@temporalio/client": "1.24.0",
+    "dotenv": "18.0.5",
+    "fastify": "5.12.5"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.9",
+    "tsx": "4.23.15"
+  }
+}

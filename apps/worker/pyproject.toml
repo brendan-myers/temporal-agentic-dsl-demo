@@ -1,0 +1,25 @@
+[project]
+name = "agent-worker"
+version = "0.1.0"
+description = "Generic Temporal agent workflow that executes a JSON workflow definition"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic==1.11.0",
+    "pydantic==2.13.5",
+    "python-dotenv==1.2.4",
+    "temporalio==1.34.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+testpaths = ["tests"]
+
+[tool.uv]
+package = false

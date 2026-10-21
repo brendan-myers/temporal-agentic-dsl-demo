@@ -1,0 +1,17 @@
+{
+  "name": "temporal-wysiwyg-dsl",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "temporal": "temporal server start-dev",
+    "dev": "concurrently -k -n worker,server,web -c magenta,blue,green \"pnpm worker\" \"pnpm --filter @demo/server dev\" \"pnpm --filter @demo/web dev\"",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @demo/dsl test && cd apps/worker && uv run pytest -q",
+    "worker": "cd apps/worker && uv run python worker.py"
+  },
+  "devDependencies": {
+    "concurrently": "10.0.5",
+    "typescript": "5.9.3"
+  },
+  "packageManager": "pnpm@10.32.0"
+}

@@ -1,0 +1,225 @@
+[
+  {
+    "name": "lookup_customer",
+    "title": "Look up customer",
+    "description": "Find a customer record by email. Returns name, tier, lifetime value and account status.",
+    "category": "CRM",
+    "sideEffect": false,
+    "params": {
+      "email": {
+        "type": "string",
+        "description": "Customer email address"
+      }
+    },
+    "required": [
+      "email"
+    ]
+  },
+  {
+    "name": "lookup_company",
+    "title": "Look up company",
+    "description": "Enrich a company by domain. Returns industry, employee count, region and tech stack.",
+    "category": "CRM",
+    "sideEffect": false,
+    "params": {
+      "domain": {
+        "type": "string",
+        "description": "Company web domain, e.g. acme.com"
+      }
+    },
+    "required": [
+      "domain"
+    ]
+  },
+  {
+    "name": "create_crm_task",
+    "title": "Create CRM task",
+    "description": "Create a follow-up task for a sales rep in the CRM.",
+    "category": "CRM",
+    "sideEffect": true,
+    "params": {
+      "owner": {
+        "type": "string",
+        "description": "Rep or team that owns the task"
+      },
+      "title": {
+        "type": "string",
+        "description": "Short task title"
+      },
+      "notes": {
+        "type": "string",
+        "description": "Context for the rep"
+      }
+    },
+    "required": [
+      "owner",
+      "title"
+    ]
+  },
+  {
+    "name": "lookup_order",
+    "title": "Look up order",
+    "description": "Fetch an order by id. Returns amount, currency, items, order date and status.",
+    "category": "Commerce",
+    "sideEffect": false,
+    "params": {
+      "order_id": {
+        "type": "string",
+        "description": "Order identifier"
+      }
+    },
+    "required": [
+      "order_id"
+    ]
+  },
+  {
+    "name": "issue_refund",
+    "title": "Issue refund",
+    "description": "Refund all or part of an order to the original payment method.",
+    "category": "Commerce",
+    "sideEffect": true,
+    "params": {
+      "order_id": {
+        "type": "string",
+        "description": "Order identifier"
+      },
+      "amount": {
+        "type": "number",
+        "description": "Amount to refund"
+      },
+      "reason": {
+        "type": "string",
+        "description": "Reason recorded on the refund"
+      }
+    },
+    "required": [
+      "order_id",
+      "amount"
+    ]
+  },
+  {
+    "name": "send_email",
+    "title": "Send email",
+    "description": "Send an email to a recipient.",
+    "category": "Comms",
+    "sideEffect": true,
+    "params": {
+      "to": {
+        "type": "string",
+        "description": "Recipient email address"
+      },
+      "subject": {
+        "type": "string",
+        "description": "Subject line"
+      },
+      "body": {
+        "type": "string",
+        "description": "Plain-text body"
+      }
+    },
+    "required": [
+      "to",
+      "subject",
+      "body"
+    ]
+  },
+  {
+    "name": "post_slack_message",
+    "title": "Post Slack message",
+    "description": "Post a message to a Slack channel.",
+    "category": "Comms",
+    "sideEffect": true,
+    "params": {
+      "channel": {
+        "type": "string",
+        "description": "Channel name, e.g. #incidents"
+      },
+      "text": {
+        "type": "string",
+        "description": "Message text (markdown allowed)"
+      }
+    },
+    "required": [
+      "channel",
+      "text"
+    ]
+  },
+  {
+    "name": "page_oncall",
+    "title": "Page on-call",
+    "description": "Page the on-call engineer for a service.",
+    "category": "Ops",
+    "sideEffect": true,
+    "params": {
+      "service": {
+        "type": "string",
+        "description": "Service name"
+      },
+      "summary": {
+        "type": "string",
+        "description": "One-line summary of the problem"
+      }
+    },
+    "required": [
+      "service",
+      "summary"
+    ]
+  },
+  {
+    "name": "check_service_health",
+    "title": "Check service health",
+    "description": "Return current error rate, p99 latency and status for a service.",
+    "category": "Ops",
+    "sideEffect": false,
+    "params": {
+      "service": {
+        "type": "string",
+        "description": "Service name"
+      }
+    },
+    "required": [
+      "service"
+    ]
+  },
+  {
+    "name": "create_ticket",
+    "title": "Create ticket",
+    "description": "Open a ticket in the issue tracker.",
+    "category": "Ops",
+    "sideEffect": true,
+    "params": {
+      "title": {
+        "type": "string",
+        "description": "Ticket title"
+      },
+      "description": {
+        "type": "string",
+        "description": "Ticket body"
+      },
+      "priority": {
+        "type": "string",
+        "description": "P1, P2, P3 or P4"
+      }
+    },
+    "required": [
+      "title",
+      "description"
+    ]
+  },
+  {
+    "name": "search_knowledge_base",
+    "title": "Search knowledge base",
+    "description": "Search internal docs and policies. Returns the top matching snippets.",
+    "category": "Knowledge",
+    "sideEffect": false,
+    "params": {
+      "query": {
+        "type": "string",
+        "description": "Search query"
+      }
+    },
+    "required": [
+      "query"
+    ]
+  }
+]
